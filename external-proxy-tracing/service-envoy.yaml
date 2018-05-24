@@ -1,0 +1,69 @@
+static_resources:
+  listeners:
+  - address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9000
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          tracing:
+            operation_name: egress
+          codec_type: auto
+          stat_prefix: egress_http
+          route_config:
+            name: httpbin_route
+            virtual_hosts:
+            - name: httpbin_service
+              domains:
+              - "*"
+              routes:
+              - match:
+                  prefix: "/status"
+                route:
+                  cluster: httpbin_service
+                  host_rewrite: www.httpbin.org
+                decorator:
+                  operation: httpBinStatusCode
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: httpbin_service
+                  host_rewrite: www.httpbin.org
+                decorator:
+                  operation: httpBinRoot
+          http_filters:
+          - name: envoy.router
+            config: {}
+  clusters:
+  - name: httpbin_service
+    connect_timeout: 2.5s
+    type: LOGICAL_DNS
+    dns_lookup_family: V4_ONLY
+    lb_policy: round_robin
+    hosts:
+    - socket_address:
+        address: httpbin.org
+        port_value: 443
+    tls_context: { sni: www.httpbin.org }
+  - name: zipkin
+    connect_timeout: 1s
+    type: strict_dns
+    lb_policy: round_robin
+    hosts:
+    - socket_address:
+        address: zipkin
+        port_value: 9411
+tracing:
+  http:
+    name: envoy.zipkin
+    config:
+      collector_cluster: zipkin
+      collector_endpoint: "/api/v1/spans"
+admin:
+  access_log_path: "/dev/null"
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 8081

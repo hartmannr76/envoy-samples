@@ -1,14 +1,18 @@
 version: '2'
 services:
-  sample-tls-app:
+  tracing-proxy:
     build:
       context: .
+    container_name: tracing-proxy
     volumes:
       - ./service-envoy.yaml:/etc/service-envoy.yaml
-      - ~/dev-certs:/etc/ssl # should point to local dev certs
     ports:
       - "8081:8081"
-      - "8082:8082"
     expose:
       - "8081"
-      - "8082"
+    links:
+      - zipkin
+  zipkin:
+    image: openzipkin/zipkin
+    ports:
+      - '9411:9411'
