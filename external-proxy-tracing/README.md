@@ -5,7 +5,7 @@ in this case the hosted `httpbin` application.
 
 ## Usage
 
-Assuming you are in the `./envoy-samples/external-tracingtracing` path, run the following:
+Assuming you are in the `./envoy-samples/external-proxy-tracing` path, run the following:
 
 ```bash
 # start the services
